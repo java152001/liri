@@ -9,3 +9,7 @@ exports.spotify = {
 exports.omdb = {
     id: process.env.omdb_ID
 }
+
+exports.bandsIT = {
+    id: process.env.BANDS_ID
+}
