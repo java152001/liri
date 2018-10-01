@@ -1,13 +1,17 @@
 require("dotenv").config();
 
 var command = process.argv[2];
-var search = process.argv[3];
+var search = process.argv.slice(3).join(" ");
 
 var keys = require("./keys.js");
 var request = require('request');
 var moment = require('moment');
+var Spotify = require('node-spotify-api');
 
-// var spotify = new Spotify(keys.spotify);
+var spotify = new Spotify({
+    id: keys.spotify.id,
+    secret: keys.spotify.secret});
+
 var omdb = keys.omdb.id;
 var bandsIT = keys.bandsIT.id;
 
@@ -19,12 +23,26 @@ if (command === 'concert-this') {
     bandsInTown(search);
 }
 
+if (command === 'spotify-this-song') {
+    songThis(search);
+}
+
 if (command === 'do-what-it-says') {
     var fs = require('fs');
 
     fs.readFile("random.txt", "utf8", function(error, data) {
 
     var inputArr = data.split(",");
+
+    if (inputArr[0] === 'movie-this') {
+        movieThis(inputArr[1]);
+    }
+    else if (inputArr[0] === 'concert-this') {
+        bandsInTown(inputArr[1]);
+    }
+    else if (inputArr[0] === 'spotify-this-song') {
+        songThis(inputArr[1]);
+    }
     
     });
 }
@@ -55,8 +73,6 @@ function bandsInTown (artist) {
 
     var url = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=" + bandsIT;
 
-    console.log(url);
-
     request(url, function(error, response, body) {
         if (!error && response.statusCode === 200) {
             var bandInfo = JSON.parse(body);
@@ -68,4 +84,24 @@ function bandsInTown (artist) {
         }
     });
 
+}
+
+function songThis (song) {
+
+    if (!song) {
+        song = "The Sign";
+    }
+
+    spotify.search({type: 'track', query: song }, function(err, data) {
+
+        if (err) {
+           return console.log(err);
+        }
+
+        console.log("\nArtist: " + data.tracks.items[0].artists[0].name);
+        console.log("Song Name: " + data.tracks.items[0].name);
+        console.log("Preview URL: " + data.tracks.items[0].preview_url);
+        console.log("Album Name: " + data.tracks.items[0].album.name + "\n");
+        
+    })
 }
